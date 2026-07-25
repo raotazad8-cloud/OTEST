@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>McCarthy Glass AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        .glass-input {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .glass-input:focus {
+            outline: none;
+            border-color: rgba(168, 85, 247, 0.6);
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.3);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4 font-sans text-white">
+
+    <div class="glass-card w-full max-w-2xl rounded-2xl p-6 sm:p-8 space-y-6">
+        <header class="text-center space-y-2">
+            <h1 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-purple-400 to-pink-300 bg-clip-text text-transparent">
+                McCarthy Knowledge AI
+            </h1>
+            <p class="text-sm text-gray-300">FastAPI • SerpAPI • Wikipedia • Glass System</p>
+        </header>
+
+        <div id="chat-box" class="glass-card min-h-[220px] max-h-[350px] overflow-y-auto rounded-xl p-4 text-sm leading-relaxed space-y-3">
+            <div class="text-gray-400 italic">Enter a query below. The agent will determine whether to use Wikipedia or SerpAPI to formulate an answer...</div>
+        </div>
+
+        <form id="ai-form" class="flex gap-2">
+            <input id="user-input" type="text" placeholder="Ask anything (e.g. History of Quantum Mechanics + current news)..." required
+                class="glass-input flex-1 px-4 py-3 rounded-xl text-sm placeholder-gray-400 text-white transition-all" />
+            <button type="submit" id="submit-btn" 
+                class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-medium px-5 py-3 rounded-xl shadow-lg transition-all duration-200 active:scale-95">
+                Send
+            </button>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById('ai-form');
+        const input = document.getElementById('user-input');
+        const chatBox = document.getElementById('chat-box');
+        const btn = document.getElementById('submit-btn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const query = input.value.trim();
+            if(!query) return;
+
+            chatBox.innerHTML += `<div class="text-purple-300 font-semibold">User: <span class="text-white font-normal">${query}</span></div>`;
+            input.value = '';
+            btn.disabled = true;
+            btn.innerText = "Reasoning...";
+
+            try {
+                const res = await fetch('/api/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
+                });
+                const data = await res.json();
+                chatBox.innerHTML += `<div class="text-pink-300 font-semibold mt-2">McCarthy Agent: <span class="text-gray-200 font-normal block mt-1">${data.answer || data.detail}</span></div>`;
+            } catch (err) {
+                chatBox.innerHTML += `<div class="text-red-400 mt-2">Error connecting to server.</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Send";
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        });
+    </script>
+</body>
+</html>
